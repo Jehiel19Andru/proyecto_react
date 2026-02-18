@@ -36,7 +36,7 @@ function App() {
     setError(null);
     try {
       // Fetch a nuestra API local (CORS debe estar habilitado en backend)
-      const respuesta = await fetch('http://localhost:3001/api/sensores');
+    const respuesta = await fetch('https://proyecto-react-np8y.onrender.com/api/sensores'); 
       if (!respuesta.ok) {
         throw new Error(`Error HTTP: ${respuesta.status}`);
       }
