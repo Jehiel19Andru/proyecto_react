@@ -2,125 +2,120 @@
 // ============================================
 // FRONTEND: Dashboard Reactivo con React
 // ============================================
-// 🔹 IMPORTS: Hooks de React para manejar estado y efectos
 import { useState, useEffect } from 'react'
 import './App.css'
+
 function App() {
   // ============================================
-  // 1 ESTADO REACTIVO (Tema 1.1 - Definición)
+  // 1 ESTADO REACTIVO
   // ============================================
-  // useState crea una variable "reactiva":
-  // cuando cambia, React actualiza automáticamente la UI.
-  // Estado principal: lista de sensores
   const [sensores, setSensores] = useState([]);
-  // Estado para el formulario de nuevo sensor
   const [formulario, setFormulario] = useState({
     nombre: '',
     tipo: '',
     valor: ''
   });
-  // Estado para mensajes de carga/error
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
+  const [filtroTipo, setFiltroTipo] = useState('todos');
+
+  // URL de tu API en Render
+  const API_URL = 'https://proyecto-react-np8y.onrender.com/api/sensores';
+
   // ============================================
-  // 2️ EFECTOS SECUNDARIOS (Ciclo de vida)
+  // 2 EFECTOS SECUNDARIOS (Ciclo de vida)
   // ============================================
-  // useEffect se ejecuta después de que el componente se renderiza.
-  // El array vacío [] significa: "ejecutar solo al montar el componente".
   useEffect(() => {
     cargarSensores();
-  }, []); // Dependencias vacías = solo al inicio
-  // Función para obtener datos del backend
+  }, []);
+
+  // --- Función para obtener datos (GET) ---
   const cargarSensores = async () => {
     setCargando(true);
     setError(null);
     try {
-      // Fetch a nuestra API local (CORS debe estar habilitado en backend)
-    const respuesta = await fetch('https://proyecto-react-np8y.onrender.com/api/sensores'); 
+      const respuesta = await fetch(API_URL);
       if (!respuesta.ok) {
         throw new Error(`Error HTTP: ${respuesta.status}`);
       }
       const datos = await respuesta.json();
-      // AQUÍ OCURRE LA MAGIA REACTIVA:
-      // Al llamar a setSensores, React detecta el cambio de estado
-      // y vuelve a ejecutar la función del componente (re-render)
-      // con los nuevos datos, actualizando la UI automáticamente.
       setSensores(datos);
     } catch (err) {
-      console.error(" Error al cargar sensores:", err);
-      setError("No se pudo conectar con el servidor. ¿Está corriendo el backend ? ");
-} finally {
+      console.error("Error al cargar sensores:", err);
+      setError("No se pudo conectar con el servidor. ¿Está despertando el backend?");
+    } finally {
       setCargando(false);
     }
   };
-  // 🔹 Manejar cambios en los inputs del formulario
+
+  // --- Manejar cambios en los inputs ---
   const manejarCambio = (e) => {
-    // Actualizamos solo el campo que cambió, manteniendo los demás
     setFormulario({
-      ...formulario, // Copiamos el estado anterior (spread operator)
-      [e.target.name]: e.target.value // Actualizamos solo la propiedad cambiada
+      ...formulario,
+      [e.target.name]: e.target.value
     });
   };
-  // 🔹 Agregar nuevo sensor (POST a la API)
+
+  // --- Agregar nuevo sensor (POST) ---
   const agregarSensor = async (e) => {
-    e.preventDefault(); // Evita que la página se recargue
-    // Validación básica
+    e.preventDefault();
     if (!formulario.nombre || !formulario.tipo || !formulario.valor) {
       alert("Por favor completa todos los campos");
       return;
     }
+
     try {
-      const respuesta = await fetch('https://proyecto-react-np8y.onrender.com/api/sensores'), {
+      const respuesta = await fetch(API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json' // Indicamos que enviamos JSON
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formulario) // Convertimos objeto a string JSON
+        body: JSON.stringify(formulario)
       });
+
       if (!respuesta.ok) throw new Error("Error al crear sensor");
-      // Limpiamos el formulario
+      
       setFormulario({ nombre: '', tipo: '', valor: '' });
-      // 🔄 Recargamos la lista para mostrar el nuevo sensor
-      // Esto demuestra la reactividad: cambio de datos → UI actualizada
-      cargarSensores();
+      cargarSensores(); // Recarga la lista automáticamente
     } catch (err) {
       console.error("❌ Error:", err);
       alert("Error al agregar el sensor");
     }
   };
-  // 🔹 Eliminar sensor (DELETE a la API)
+
+  // --- Eliminar sensor (DELETE) ---
   const eliminarSensor = async (id) => {
-    if (!confirm(`¿Eliminar ${sensores.find(s => s.id === id)?.nombre}?`)) {
-      return; // Si el usuario cancela, no hacemos nada
-    }
+    if (!confirm(`¿Estás seguro de eliminar este sensor?`)) return;
+
     try {
-      await fetch(`https://proyecto-react-np8y.onrender.com/api/sensores/${id}`, {
+      const respuesta = await fetch(`${API_URL}/${id}`, {
         method: 'DELETE'
       });
-      // Actualizamos la lista tras eliminar
+      
+      if (!respuesta.ok) throw new Error("Error al eliminar");
       cargarSensores();
     } catch (err) {
       console.error("❌ Error al eliminar:", err);
       alert("Error al eliminar el sensor");
     }
   };
-  // Filtrar sensores por tipo ( Reactividad en acción)
-  const [filtroTipo, setFiltroTipo] = useState('todos');
+
+  // Lógica de filtrado
   const sensoresFiltrados = filtroTipo === 'todos'
     ? sensores
     : sensores.filter(s => s.tipo === filtroTipo);
+
   // ============================================
-  // 3️ ⃣ VISTA DECLARATIVA (Tema 1.4 - Framework)
+  // 3 VISTA DECLARATIVA (JSX)
   // ============================================
-  // En React, describimos CÓMO QUEREMOS que se vea la UI
-  // en función del estado actual. React se encarga del "cómo".
   return (
     <div className="contenedor">
       <header>
         <h1>📡 SensorFlow Dashboard</h1>
         <p className="subtitulo">Programación Reactiva con React + Node.js</p>
       </header>
-      {/* --- FORMULARIO DE ENTRADA --- */}
+
+      {/* Formulario */}
       <form onSubmit={agregarSensor} className="formulario">
         <input
           name="nombre"
@@ -128,14 +123,12 @@ function App() {
           value={formulario.nombre}
           onChange={manejarCambio}
           required
-          aria-label="Nombre del sensor"
         />
         <select
           name="tipo"
           value={formulario.tipo}
           onChange={manejarCambio}
           required
-          aria-label="Tipo de sensor"
         >
           <option value="">Tipo...</option>
           <option value="Temperatura">🌡️ Temperatura</option>
@@ -149,13 +142,13 @@ function App() {
           value={formulario.valor}
           onChange={manejarCambio}
           required
-          aria-label="Valor medido"
         />
         <button type="submit" disabled={cargando}>
-          {cargando ? 'Cargando...' : '➕ Agregar'}
+          {cargando ? 'Enviando...' : '➕ Agregar'}
         </button>
       </form>
-      {/* --- FILTROS --- */}
+
+      {/* Filtros */}
       <div className="filtros">
         <label>Filtrar por tipo: </label>
         <select
@@ -168,37 +161,37 @@ function App() {
           <option value="Luz">Luz</option>
         </select>
       </div>
-      {/* --- MENSAJES DE ESTADO --- */}
+
+      {/* Mensajes de estado */}
       {error && <div className="error">⚠️ {error}</div>}
-      {cargando && !sensores.length && <div className="cargando">⏳ Cargando
-        sensores...</div>}
-      {/* --- LISTA REACTIVA DE SENSORES --- */}
+      {cargando && !sensores.length && <div className="cargando">⏳ Conectando con el servidor...</div>}
+
+      {/* Grid de Sensores */}
       <div className="grid-sensores">
         {sensoresFiltrados.map((sensor) => (
           <article key={sensor.id} className="tarjeta-sensor">
             <h3>{sensor.nombre}</h3>
             <p className="tipo">🏷️ {sensor.tipo}</p>
-            <p className="valor">📊 {sensor.valor} {sensor.tipo ===
-              'Temperatura' ? '°C' : sensor.tipo === 'Humedad' ? '%' : 'lux'}</p>
+            <p className="valor">
+              📊 {sensor.valor} 
+              {sensor.tipo === 'Temperatura' ? '°C' : sensor.tipo === 'Humedad' ? '%' : ' lux'}
+            </p>
             <button
               onClick={() => eliminarSensor(sensor.id)}
               className="btn-eliminar"
-              aria-label={`Eliminar ${sensor.nombre}`}
-            >🗑️
-              Eliminar
+            >
+              🗑️ Eliminar
             </button>
           </article>
         ))}
       </div>
-      {/* Mensaje cuando no hay resultados */}
+
+      {/* Mensaje vacío */}
       {sensoresFiltrados.length === 0 && !cargando && (
-        <p className="vacio">
-          {filtroTipo === 'todos'
-            ? 'No hay sensores registrados. ¡Agrega uno!'
-            : `No hay sensores de tipo "${filtroTipo}"`}
-        </p>
+        <p className="vacio">No hay sensores para mostrar.</p>
       )}
     </div>
   )
 }
+
 export default App
