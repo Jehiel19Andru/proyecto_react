@@ -70,7 +70,7 @@ function App() {
       return;
     }
     try {
-      const respuesta = await fetch('http://localhost:3001/api/sensores', {
+      const respuesta = await fetch('https://proyecto-react-np8y.onrender.com/api/sensores'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json' // Indicamos que enviamos JSON
@@ -94,7 +94,7 @@ function App() {
       return; // Si el usuario cancela, no hacemos nada
     }
     try {
-      await fetch(`http://localhost:3001/api/sensores/${id}`, {
+      await fetch(`https://proyecto-react-np8y.onrender.com/api/sensores/${id}`, {
         method: 'DELETE'
       });
       // Actualizamos la lista tras eliminar
